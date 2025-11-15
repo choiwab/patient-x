@@ -2,6 +2,7 @@
 
 use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{pallet_prelude::*, BoundedVec};
+use frame_system::pallet_prelude::BlockNumberFor;
 use scale_info::TypeInfo;
 use sp_runtime::RuntimeDebug;
 
@@ -14,7 +15,8 @@ pub type JurisdictionCode = BoundedVec<u8, ConstU32<8>>;
 /// User information structure
 #[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
-pub struct UserInfo<T: frame_system::Config> {
+#[codec(mel_bound())]
+pub struct UserInfo<T: crate::Config> {
 	/// User's Decentralized Identifier
 	pub did: DID,
 	/// Type of user
@@ -22,26 +24,30 @@ pub struct UserInfo<T: frame_system::Config> {
 	/// User's jurisdiction
 	pub jurisdiction: JurisdictionCode,
 	/// Optional institution affiliation
-	pub institution: Option<BoundedVec<u8, ConstU32<128>>>,
+	pub institution: Option<BoundedVec<u8, T::MaxInstitutionLength>>,
 	/// Whether the identity is verified
 	pub verified: bool,
-	/// Timestamp when identity was created
-	pub created_at: <T as frame_system::Config>::BlockNumber,
+	/// Block number when identity was created
+	pub created_at: BlockNumberFor<T>,
 }
 
 /// Verification status structure
 #[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(T))]
-pub struct VerificationStatus<T: frame_system::Config> {
+#[codec(mel_bound())]
+pub struct VerificationStatus<T: crate::Config> {
 	/// Whether the user is verified
 	pub verified: bool,
 	/// Account that performed the verification
 	pub verifier: T::AccountId,
-	/// Timestamp when verification occurred
-	pub verified_at: <T as frame_system::Config>::BlockNumber,
+	/// Block number when verification occurred
+	pub verified_at: BlockNumberFor<T>,
 }
 
-impl<T: frame_system::Config> Default for VerificationStatus<T> {
+impl<T: crate::Config> Default for VerificationStatus<T>
+where
+	T::AccountId: Default,
+{
 	fn default() -> Self {
 		Self {
 			verified: false,

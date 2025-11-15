@@ -37,7 +37,7 @@ pub use weights::*;
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
-	use frame_support::{pallet_prelude::*, traits::Time};
+	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
 	use sp_runtime::traits::Verify;
 
@@ -48,9 +48,6 @@ pub mod pallet {
 	pub trait Config: frame_system::Config {
 		/// The overarching event type.
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
-
-		/// Time provider
-		type TimeProvider: Time;
 
 		/// Maximum length of institution name
 		#[pallet::constant]
@@ -183,7 +180,7 @@ pub mod pallet {
 				jurisdiction: jurisdiction.clone(),
 				institution,
 				verified: false,
-				created_at: T::TimeProvider::now(),
+				created_at: frame_system::Pallet::<T>::block_number(),
 			};
 
 			Identities::<T>::insert(&who, user_info);
@@ -277,7 +274,7 @@ pub mod pallet {
 				VerificationStatus {
 					verified: true,
 					verifier: verifier.clone(),
-					verified_at: T::TimeProvider::now(),
+					verified_at: frame_system::Pallet::<T>::block_number(),
 				}
 			);
 

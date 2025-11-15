@@ -18,20 +18,14 @@ pub struct SubstrateWeight<T>(core::marker::PhantomData<T>);
 impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
 	fn register_identity() -> Weight {
 		Weight::from_parts(50_000_000, 0)
-			.saturating_add(T::DbWeight::get().reads(2))
-			.saturating_add(T::DbWeight::get().writes(3))
 	}
 
 	fn update_jurisdiction() -> Weight {
 		Weight::from_parts(30_000_000, 0)
-			.saturating_add(T::DbWeight::get().reads(1))
-			.saturating_add(T::DbWeight::get().writes(2))
 	}
 
 	fn verify_identity() -> Weight {
 		Weight::from_parts(40_000_000, 0)
-			.saturating_add(T::DbWeight::get().reads(2))
-			.saturating_add(T::DbWeight::get().writes(2))
 	}
 }
 

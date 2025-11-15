@@ -18,7 +18,6 @@ frame_support::construct_runtime!(
 	pub enum Test
 	{
 		System: frame_system,
-		Timestamp: pallet_timestamp,
 		IdentityRegistry: pallet_identity_registry,
 	}
 );
@@ -53,20 +52,12 @@ impl frame_system::Config for Test {
 	type MaxConsumers = ConstU32<16>;
 }
 
-impl pallet_timestamp::Config for Test {
-	type Moment = u64;
-	type OnTimestampSet = ();
-	type MinimumPeriod = ConstU64<5>;
-	type WeightInfo = ();
-}
-
 parameter_types! {
 	pub const MaxInstitutionLength: u32 = 128;
 }
 
 impl pallet_identity_registry::Config for Test {
 	type RuntimeEvent = RuntimeEvent;
-	type TimeProvider = Timestamp;
 	type MaxInstitutionLength = MaxInstitutionLength;
 	type WeightInfo = ();
 	type Signature = sp_runtime::MultiSignature;
