@@ -1,0 +1,31 @@
+[package]
+name = "identity-consent-runtime"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license = "MIT"
+description = "Runtime for Patient X IdentityConsent Chain"
+repository.workspace = true
+
+[dependencies]
+codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive"] }
+scale-info = { version = "2.0.0", default-features = false, features = ["derive"] }
+
+# Substrate dependencies
+frame-support = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+frame-system = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+sp-runtime = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+
+# Local pallets
+pallet-identity-registry = { path = "../pallets/identity-registry", default-features = false }
+
+[features]
+default = ["std"]
+std = [
+	"codec/std",
+	"scale-info/std",
+	"frame-support/std",
+	"frame-system/std",
+	"sp-runtime/std",
+	"pallet-identity-registry/std",
+]

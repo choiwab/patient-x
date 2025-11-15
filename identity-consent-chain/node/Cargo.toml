@@ -1,0 +1,19 @@
+[package]
+name = "identity-consent-node"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license = "MIT"
+description = "Node implementation for Patient X IdentityConsent Chain"
+repository.workspace = true
+build = "build.rs"
+
+[dependencies]
+# Placeholder - will be implemented in next phase
+codec = { package = "parity-scale-codec", version = "3.0.0" }
+
+[build-dependencies]
+substrate-build-script-utils = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+
+[features]
+default = []

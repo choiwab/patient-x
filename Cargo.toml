@@ -584,6 +584,13 @@ members = [
 	"templates/solochain/runtime",
 	"templates/zombienet",
 	"umbrella",
+	# Patient X Custom Parachains
+	"identity-consent-chain/node",
+	"identity-consent-chain/runtime",
+	"identity-consent-chain/pallets/identity-registry",
+	"identity-consent-chain/pallets/consent-manager",
+	"identity-consent-chain/pallets/authentication",
+	"identity-consent-chain/pallets/jurisdiction-manager",
 ]
 
 default-members = [
