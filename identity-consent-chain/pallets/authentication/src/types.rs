@@ -2,6 +2,8 @@ use codec::{Decode, Encode, MaxEncodedLen};
 use frame_system::pallet_prelude::BlockNumberFor;
 use scale_info::TypeInfo;
 use sp_runtime::RuntimeDebug;
+use sp_std::vec;
+use sp_std::vec::Vec;
 
 /// Type alias for session token (32 bytes)
 pub type SessionToken = [u8; 32];
