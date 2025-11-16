@@ -3,7 +3,7 @@
 use crate::{self as pallet_identity_registry, *};
 use frame_support::{
 	assert_noop, assert_ok, parameter_types,
-	traits::{ConstU32, ConstU64},
+	traits::ConstU32,
 };
 use sp_core::H256;
 use sp_runtime::{
@@ -50,6 +50,13 @@ impl frame_system::Config for Test {
 	type SS58Prefix = ();
 	type OnSetCode = ();
 	type MaxConsumers = ConstU32<16>;
+	type RuntimeTask = ();
+	type ExtensionsWeightInfo = ();
+	type SingleBlockMigrations = ();
+	type MultiBlockMigrator = ();
+	type PreInherents = ();
+	type PostInherents = ();
+	type PostTransactions = ();
 }
 
 parameter_types! {
@@ -60,7 +67,6 @@ impl pallet_identity_registry::Config for Test {
 	type RuntimeEvent = RuntimeEvent;
 	type MaxInstitutionLength = MaxInstitutionLength;
 	type WeightInfo = ();
-	type Signature = sp_runtime::MultiSignature;
 }
 
 // Helper function to create new test externalities
@@ -84,7 +90,7 @@ fn register_identity_works() {
 		assert_ok!(IdentityRegistry::register_identity(
 			RuntimeOrigin::signed(alice),
 			did.clone(),
-			UserType::Patient,
+			0, // Patient
 			jurisdiction.clone(),
 			None,
 		));
@@ -104,14 +110,13 @@ fn register_identity_works() {
 			Event::IdentityRegistered {
 				account: alice,
 				did,
-				user_type: UserType::Patient,
 			}
 			.into(),
 		);
 	});
 }
 
-#test]
+#[test]
 fn register_identity_with_institution_works() {
 	new_test_ext().execute_with(|| {
 		let researcher = 2u64;
@@ -122,7 +127,7 @@ fn register_identity_with_institution_works() {
 		assert_ok!(IdentityRegistry::register_identity(
 			RuntimeOrigin::signed(researcher),
 			did.clone(),
-			UserType::Researcher,
+			1, // Researcher
 			jurisdiction,
 			Some(institution),
 		));
@@ -145,7 +150,7 @@ fn duplicate_did_fails() {
 		assert_ok!(IdentityRegistry::register_identity(
 			RuntimeOrigin::signed(alice),
 			did.clone(),
-			UserType::Patient,
+			0, // Patient
 			jurisdiction.clone(),
 			None,
 		));
@@ -155,7 +160,7 @@ fn duplicate_did_fails() {
 			IdentityRegistry::register_identity(
 				RuntimeOrigin::signed(bob),
 				did,
-				UserType::Researcher,
+				1, // Researcher
 				jurisdiction,
 				None,
 			),
@@ -176,7 +181,7 @@ fn duplicate_account_registration_fails() {
 		assert_ok!(IdentityRegistry::register_identity(
 			RuntimeOrigin::signed(alice),
 			did1,
-			UserType::Patient,
+			0, // Patient
 			jurisdiction.clone(),
 			None,
 		));
@@ -186,7 +191,7 @@ fn duplicate_account_registration_fails() {
 			IdentityRegistry::register_identity(
 				RuntimeOrigin::signed(alice),
 				did2,
-				UserType::Patient,
+				0, // Patient
 				jurisdiction,
 				None,
 			),
@@ -207,7 +212,7 @@ fn update_jurisdiction_works() {
 		assert_ok!(IdentityRegistry::register_identity(
 			RuntimeOrigin::signed(alice),
 			did,
-			UserType::Patient,
+			0, // Patient
 			old_jurisdiction.clone(),
 			None,
 		));
@@ -265,7 +270,7 @@ fn verify_identity_works() {
 		assert_ok!(IdentityRegistry::register_identity(
 			RuntimeOrigin::signed(patient),
 			patient_did.clone(),
-			UserType::Patient,
+			0, // Patient
 			jurisdiction.clone(),
 			None,
 		));
@@ -274,28 +279,24 @@ fn verify_identity_works() {
 		assert_ok!(IdentityRegistry::register_identity(
 			RuntimeOrigin::signed(institution),
 			institution_did,
-			UserType::Institution,
+			2, // Institution
 			jurisdiction,
 			None,
 		));
 
 		// Create dummy signature
-		let signature = sp_runtime::MultiSignature::Sr25519(
-			sp_core::sr25519::Signature([0u8; 64])
-		);
 
 		// Institution verifies patient
 		assert_ok!(IdentityRegistry::verify_identity(
 			RuntimeOrigin::signed(institution),
-			patient_did.clone(),
-			signature,
+			patient_did.clone()
 		));
 
 		// Verify status
 		let user_info = Identities::<Test>::get(&patient).unwrap();
 		assert!(user_info.verified);
 
-		let verification_status = VerifiedUsers::<Test>::get(&patient_did);
+		let verification_status = VerifiedUsers::<Test>::get(&patient_did).unwrap();
 		assert!(verification_status.verified);
 		assert_eq!(verification_status.verifier, institution);
 
@@ -323,7 +324,7 @@ fn verify_identity_unauthorized_fails() {
 		assert_ok!(IdentityRegistry::register_identity(
 			RuntimeOrigin::signed(patient1),
 			did1,
-			UserType::Patient,
+			0, // Patient
 			jurisdiction.clone(),
 			None,
 		));
@@ -331,21 +332,17 @@ fn verify_identity_unauthorized_fails() {
 		assert_ok!(IdentityRegistry::register_identity(
 			RuntimeOrigin::signed(patient2),
 			did2.clone(),
-			UserType::Patient,
+			0, // Patient
 			jurisdiction,
 			None,
 		));
 
-		let signature = sp_runtime::MultiSignature::Sr25519(
-			sp_core::sr25519::Signature([0u8; 64])
-		);
 
 		// Patient trying to verify another patient should fail
 		assert_noop!(
 			IdentityRegistry::verify_identity(
 				RuntimeOrigin::signed(patient1),
-				did2,
-				signature,
+				did2
 			),
 			Error::<Test>::UnauthorizedVerifier
 		);
@@ -364,21 +361,17 @@ fn verify_nonexistent_did_fails() {
 		assert_ok!(IdentityRegistry::register_identity(
 			RuntimeOrigin::signed(institution),
 			institution_did,
-			UserType::Institution,
+			2, // Institution
 			jurisdiction,
 			None,
 		));
 
-		let signature = sp_runtime::MultiSignature::Sr25519(
-			sp_core::sr25519::Signature([0u8; 64])
-		);
 
 		// Try to verify non-existent DID
 		assert_noop!(
 			IdentityRegistry::verify_identity(
 				RuntimeOrigin::signed(institution),
-				nonexistent_did,
-				signature,
+				nonexistent_did
 			),
 			Error::<Test>::DIDNotFound
 		);
@@ -396,7 +389,7 @@ fn helper_functions_work() {
 		assert_ok!(IdentityRegistry::register_identity(
 			RuntimeOrigin::signed(alice),
 			did.clone(),
-			UserType::Patient,
+			0, // Patient
 			jurisdiction,
 			None,
 		));

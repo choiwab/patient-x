@@ -39,7 +39,6 @@ pub mod pallet {
 	use super::*;
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
-	use sp_runtime::traits::Verify;
 
 	#[pallet::pallet]
 	pub struct Pallet<T>(_);
@@ -55,9 +54,6 @@ pub mod pallet {
 
 		/// Weight information for extrinsics
 		type WeightInfo: WeightInfo;
-
-		/// Signature type for verification
-		type Signature: Verify<Signer = Self::AccountId> + Parameter;
 	}
 
 	/// Storage for user identities
@@ -90,7 +86,7 @@ pub mod pallet {
 		Blake2_128Concat,
 		DID,
 		VerificationStatus<T>,
-		ValueQuery,
+		OptionQuery,
 	>;
 
 	/// Storage for user jurisdictions
@@ -107,11 +103,11 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		/// Identity registered [account, did, user_type]
+		/// Identity registered [account, did]
+		/// User type can be queried from storage using the account or did
 		IdentityRegistered {
 			account: T::AccountId,
 			did: DID,
-			user_type: UserType,
 		},
 		/// Identity verified [did, verifier]
 		IdentityVerified {
@@ -151,7 +147,7 @@ pub mod pallet {
 		/// # Arguments
 		/// * `origin` - The account registering the identity
 		/// * `did` - The Decentralized Identifier
-		/// * `user_type` - Type of user (Patient, Researcher, etc.)
+		/// * `user_type_id` - Type of user as u8 (0=Patient, 1=Researcher, 2=Institution, 3=Auditor, 4=Publisher, 5=Regulator)
 		/// * `jurisdiction` - User's jurisdiction code
 		/// * `institution` - Optional institution affiliation
 		#[pallet::call_index(0)]
@@ -159,7 +155,7 @@ pub mod pallet {
 		pub fn register_identity(
 			origin: OriginFor<T>,
 			did: DID,
-			user_type: UserType,
+			user_type_id: u8,
 			jurisdiction: JurisdictionCode,
 			institution: Option<BoundedVec<u8, T::MaxInstitutionLength>>,
 		) -> DispatchResult {
@@ -174,9 +170,12 @@ pub mod pallet {
 				Error::<T>::IdentityAlreadyRegistered
 			);
 
+			// Convert u8 to UserType
+			let user_type = UserType::from(user_type_id);
+
 			let user_info = UserInfo {
 				did: did.clone(),
-				user_type: user_type.clone(),
+				user_type,
 				jurisdiction: jurisdiction.clone(),
 				institution,
 				verified: false,
@@ -190,7 +189,6 @@ pub mod pallet {
 			Self::deposit_event(Event::IdentityRegistered {
 				account: who,
 				did,
-				user_type,
 			});
 
 			Ok(())
@@ -240,13 +238,11 @@ pub mod pallet {
 		/// # Arguments
 		/// * `origin` - The verifier account (must be Institution or Auditor)
 		/// * `user_did` - DID of the user to verify
-		/// * `verifier_signature` - Signature proving verification
 		#[pallet::call_index(2)]
 		#[pallet::weight(T::WeightInfo::verify_identity())]
 		pub fn verify_identity(
 			origin: OriginFor<T>,
 			user_did: DID,
-			_verifier_signature: T::Signature,
 		) -> DispatchResult {
 			let verifier = ensure_signed(origin)?;
 
@@ -300,7 +296,9 @@ pub mod pallet {
 
 		/// Check if user is verified
 		pub fn is_verified(did: &DID) -> bool {
-			VerifiedUsers::<T>::get(did).verified
+			VerifiedUsers::<T>::get(did)
+				.map(|status| status.verified)
+				.unwrap_or(false)
 		}
 	}
 }

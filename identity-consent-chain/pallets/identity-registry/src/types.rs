@@ -79,3 +79,30 @@ impl Default for UserType {
 		UserType::Patient
 	}
 }
+
+impl From<u8> for UserType {
+	fn from(value: u8) -> Self {
+		match value {
+			0 => UserType::Patient,
+			1 => UserType::Researcher,
+			2 => UserType::Institution,
+			3 => UserType::Auditor,
+			4 => UserType::Publisher,
+			5 => UserType::Regulator,
+			_ => UserType::Patient, // Default to Patient for invalid values
+		}
+	}
+}
+
+impl From<UserType> for u8 {
+	fn from(user_type: UserType) -> Self {
+		match user_type {
+			UserType::Patient => 0,
+			UserType::Researcher => 1,
+			UserType::Institution => 2,
+			UserType::Auditor => 3,
+			UserType::Publisher => 4,
+			UserType::Regulator => 5,
+		}
+	}
+}

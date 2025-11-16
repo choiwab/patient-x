@@ -26,7 +26,7 @@ mod benchmarks {
 		_(
 			RawOrigin::Signed(caller.clone()),
 			did.clone(),
-			UserType::Patient,
+			0, // Patient
 			jurisdiction,
 			None,
 		);
@@ -53,7 +53,7 @@ mod benchmarks {
 		register_identity(
 			RawOrigin::Signed(caller.clone()),
 			did.clone(),
-			UserType::Researcher,
+			1, // Researcher
 			jurisdiction,
 			Some(institution),
 		);
@@ -75,7 +75,7 @@ mod benchmarks {
 		assert!(IdentityRegistry::<T>::register_identity(
 			RawOrigin::Signed(caller.clone()).into(),
 			did,
-			UserType::Patient,
+			0, // Patient
 			old_jurisdiction,
 			None,
 		)
@@ -107,7 +107,7 @@ mod benchmarks {
 		assert!(IdentityRegistry::<T>::register_identity(
 			RawOrigin::Signed(patient).into(),
 			patient_did.clone(),
-			UserType::Patient,
+			0, // Patient
 			jurisdiction.clone(),
 			None,
 		)
@@ -117,19 +117,16 @@ mod benchmarks {
 		assert!(IdentityRegistry::<T>::register_identity(
 			RawOrigin::Signed(verifier.clone()).into(),
 			verifier_did,
-			UserType::Institution,
+			2, // Institution
 			jurisdiction,
 			None,
 		)
 		.is_ok());
 
-		// Create dummy signature
-		let signature = sp_runtime::MultiSignature::Sr25519(sp_core::sr25519::Signature([0u8; 64]));
-
 		#[extrinsic_call]
-		_(RawOrigin::Signed(verifier), patient_did.clone(), signature);
+		_(RawOrigin::Signed(verifier), patient_did.clone());
 
-		let verification = VerifiedUsers::<T>::get(&patient_did);
+		let verification = VerifiedUsers::<T>::get(&patient_did).unwrap();
 		assert!(verification.verified);
 	}
 
