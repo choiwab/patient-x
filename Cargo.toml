@@ -595,6 +595,7 @@ members = [
 	"health-data-chain/pallets/ipfs-integration",
 	"health-data-chain/pallets/access-control",
 	"health-data-chain/pallets/encryption",
+	"health-data-chain/pallets/provenance",
 ]
 
 default-members = [
