@@ -592,6 +592,7 @@ members = [
 	"identity-consent-chain/pallets/authentication",
 	"identity-consent-chain/pallets/jurisdiction-manager",
 	"health-data-chain/pallets/health-records",
+	"health-data-chain/pallets/ipfs-integration",
 ]
 
 default-members = [
