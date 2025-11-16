@@ -534,6 +534,46 @@ git lfs install
 git lfs pull
 ```
 
+#### 6. macOS libclang.dylib Error
+
+**Issue:** `error: failed to run custom build command for librocksdb-sys`
+- `dyld: Library not loaded: @rpath/libclang.dylib`
+
+**Solution (Apple Silicon):**
+```bash
+# Install LLVM
+brew install llvm
+
+# Set environment variables (for current session)
+export LIBCLANG_PATH="/opt/homebrew/opt/llvm/lib"
+export LDFLAGS="-L/opt/homebrew/opt/llvm/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/llvm/include"
+
+# Make permanent - add to ~/.zshrc
+echo 'export LIBCLANG_PATH="/opt/homebrew/opt/llvm/lib"' >> ~/.zshrc
+echo 'export LDFLAGS="-L/opt/homebrew/opt/llvm/lib"' >> ~/.zshrc
+echo 'export CPPFLAGS="-I/opt/homebrew/opt/llvm/include"' >> ~/.zshrc
+source ~/.zshrc
+
+# Clean and rebuild
+cargo clean
+cargo build
+```
+
+**Solution (Intel Mac):**
+```bash
+# Use /usr/local instead of /opt/homebrew
+export LIBCLANG_PATH="/usr/local/opt/llvm/lib"
+export LDFLAGS="-L/usr/local/opt/llvm/lib"
+export CPPFLAGS="-I/usr/local/opt/llvm/include"
+```
+
+**Alternative:** Install full Xcode (not just command line tools)
+```bash
+# Install from App Store, then:
+sudo xcode-select --install
+```
+
 ---
 
 ## Development Workflow
