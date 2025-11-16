@@ -1456,6 +1456,460 @@ fn reward_calculation_includes_bonuses() {
 
 ---
 
+### Frontend Integration Plan
+
+**Timeline**: Parallel development starting Week 12, full integration Week 24-26
+**Priority**: HIGH
+**Estimated Effort**: 150 hours total
+
+#### Technology Stack
+
+**Core Framework**:
+- React 18+ with TypeScript
+- Polkadot.js API for blockchain interaction
+- Polkadot.js Extension for wallet integration
+
+**UI Libraries**:
+- TailwindCSS for styling
+- shadcn/ui for component library
+- Recharts for data visualization
+- React Query for state management
+
+**Additional Libraries**:
+- IPFS HTTP Client for file uploads
+- ethers.js for Ethereum bridge (Phase 5)
+- @polkadot/util-crypto for cryptographic operations
+
+#### Application Structure
+
+```
+frontend/
+├── apps/
+│   ├── patient-portal/          # Patient-facing dashboard
+│   ├── researcher-portal/       # Researcher dashboard
+│   ├── institution-portal/      # Institution/auditor dashboard
+│   └── marketplace/             # Public marketplace interface
+├── packages/
+│   ├── ui/                      # Shared UI components
+│   ├── blockchain/              # Polkadot.js integration
+│   ├── ipfs/                    # IPFS utilities
+│   └── utils/                   # Common utilities
+└── docs/
+    ├── user-guides/
+    └── developer-guides/
+```
+
+#### Week 12-16: Foundation (Parallel with HealthData Chain)
+
+**Deliverables**:
+1. **Wallet Integration**
+   - Polkadot.js Extension support
+   - Account selection and management
+   - Network switching (local, Rococo, mainnet)
+   - Balance display
+
+2. **Blockchain Connection Layer**
+   ```typescript
+   // packages/blockchain/src/hooks/useIdentityRegistry.ts
+   export const useIdentityRegistry = () => {
+     const { api, isReady } = useSubstrate();
+
+     const registerIdentity = async (
+       did: string,
+       userType: UserType,
+       jurisdiction: string,
+       institution?: string
+     ) => {
+       const tx = api.tx.identityRegistry.registerIdentity(
+         did,
+         userType,
+         jurisdiction,
+         institution
+       );
+       return tx.signAndSend(/* ... */);
+     };
+
+     return { registerIdentity, /* ... */ };
+   };
+   ```
+
+3. **Core UI Components**
+   - Navigation bar with wallet connection
+   - Account selector
+   - Transaction notification system
+   - Loading states and error handling
+
+#### Week 17-20: Patient Portal
+
+**Priority**: CRITICAL
+**Features**:
+
+1. **Identity Management**
+   - Registration form with DID generation
+   - User type selection (Patient, Researcher, etc.)
+   - Jurisdiction selection with autocomplete
+   - Institution affiliation (optional)
+   - Identity verification status display
+
+2. **Consent Management Dashboard**
+   - Active consents list with filtering
+   - Grant new consent wizard:
+     * Purpose selection (dropdown + custom)
+     * Data types multi-select (checkboxes)
+     * Duration picker (start/end dates, auto-renewal)
+     * Allowed parties selector
+     * Jurisdiction restrictions
+     * Compensation preferences
+   - Consent details modal with full policy display
+   - Revoke consent functionality with confirmation dialog
+   - Consent history timeline
+
+3. **Health Records Upload**
+   - File upload interface (drag & drop)
+   - Supported formats: FHIR, DICOM, HL7, PDF, CSV
+   - Automatic encryption before IPFS upload
+   - Progress indicator for upload
+   - Record metadata editor
+   - Preview uploaded records
+   - Version history viewer
+
+4. **Data Access Dashboard**
+   - Who accessed my data (audit log)
+   - Access requests (pending/approved/denied)
+   - Revenue from data sales
+   - Consent compliance violations alerts
+
+**Mockup Example**:
+```typescript
+// apps/patient-portal/src/pages/ConsentManagement.tsx
+const ConsentManagementPage = () => {
+  const { consents, grantConsent, revokeConsent } = useConsentManager();
+  const [showGrantWizard, setShowGrantWizard] = useState(false);
+
+  return (
+    <div className="container mx-auto p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">My Consents</h1>
+        <Button onClick={() => setShowGrantWizard(true)}>
+          Grant New Consent
+        </Button>
+      </div>
+
+      <ConsentList consents={consents} onRevoke={revokeConsent} />
+
+      {showGrantWizard && (
+        <GrantConsentWizard
+          onClose={() => setShowGrantWizard(false)}
+          onSubmit={grantConsent}
+        />
+      )}
+    </div>
+  );
+};
+```
+
+#### Week 21-22: Researcher Portal
+
+**Priority**: HIGH
+**Features**:
+
+1. **Dataset Discovery**
+   - Search interface with filters:
+     * Disease area
+     * Data types
+     * Jurisdiction
+     * Sample size
+     * Date range
+     * Price range
+   - Advanced search with boolean operators
+   - Saved searches and alerts
+   - Dataset preview (metadata only)
+
+2. **Negative Data Registry Browser**
+   - Browse by disease area
+   - Filter by trial phase, discontinuation reason
+   - Sort by date, citations, verification status
+   - Dataset cards with key info:
+     * Trial phase and sample size
+     * Discontinuation reason
+     * Endpoints measured
+     * Verification status badge
+     * Citation count
+   - Detailed view with full submission
+
+3. **Data Purchase Flow**
+   - Shopping cart for multiple datasets
+   - Consent verification status indicator
+   - Price calculation with breakdown
+   - Payment processing (token transfer)
+   - Access key generation
+   - Download encrypted data
+   - Decrypt with provided key
+
+4. **Negative Data Submission**
+   - Multi-step submission form:
+     1. Protocol information
+     2. Trial details (phase, disease area, intervention)
+     3. Discontinuation reason and context
+     4. Endpoints and measurements
+     5. Safety signals (optional)
+     6. Efficacy data (optional)
+     7. Learnings and insights
+     8. Review and submit
+   - Draft saving functionality
+   - Proof of consent upload
+   - Provenance hash verification
+   - Submission status tracking
+   - Reward claim interface
+
+**Key Component**:
+```typescript
+// apps/researcher-portal/src/components/NegativeDataSubmissionForm.tsx
+const NegativeDataSubmissionForm = () => {
+  const [step, setStep] = useState(1);
+  const [formData, setFormData] = useState<NegativeDataFormData>({});
+  const { submitNegativeData } = useNegativeRegistry();
+
+  const steps = [
+    { title: "Protocol", component: ProtocolStep },
+    { title: "Trial Details", component: TrialDetailsStep },
+    { title: "Discontinuation", component: DiscontinuationStep },
+    { title: "Measurements", component: MeasurementsStep },
+    { title: "Safety & Efficacy", component: SafetyEfficacyStep },
+    { title: "Learnings", component: LearningsStep },
+    { title: "Review", component: ReviewStep },
+  ];
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      <StepIndicator steps={steps} currentStep={step} />
+      <CurrentStepComponent data={formData} onChange={setFormData} />
+      <NavigationButtons
+        onPrevious={() => setStep(step - 1)}
+        onNext={() => setStep(step + 1)}
+        onSubmit={() => submitNegativeData(formData)}
+      />
+    </div>
+  );
+};
+```
+
+#### Week 23: Institution Portal
+
+**Priority**: MEDIUM
+**Features**:
+
+1. **Identity Verification Dashboard**
+   - Pending verification requests queue
+   - User details with supporting documents
+   - Verification actions (approve/reject)
+   - Signature generation for verification
+   - Verification history
+
+2. **Negative Data Verification**
+   - Pending submissions queue
+   - Submission details viewer
+   - Supporting documentation review
+   - Protocol reference validation
+   - Verification signature generation
+   - Reject with reason functionality
+
+3. **Compliance Monitoring**
+   - Active data access agreements
+   - Consent compliance status
+   - Jurisdiction rule adherence
+   - Violation alerts and reports
+
+#### Week 24: Marketplace Public Interface
+
+**Priority**: MEDIUM
+**Features**:
+
+1. **Public Dataset Catalog**
+   - Anonymous browsing (no wallet required)
+   - Dataset preview with metadata
+   - Price display
+   - Statistics dashboard:
+     * Total datasets available
+     * Total negative data submissions
+     * Active researchers
+     * Participating institutions
+   - "Connect Wallet to Purchase" flow
+
+2. **Negative Data Registry Public View**
+   - Browse verified negative data
+   - Filter and search
+   - Citation tracking
+   - Impact metrics
+   - Public provenance verification
+
+3. **Educational Content**
+   - How it works (patients, researchers, institutions)
+   - Benefits of negative data sharing
+   - Compliance and security information
+   - FAQ
+
+#### Week 25-26: Integration & Testing
+
+**Priority**: CRITICAL
+**Activities**:
+
+1. **End-to-End User Flows**
+   - Patient registration → consent → upload → revoke
+   - Researcher registration → search → purchase → download
+   - Researcher negative data submission → verification → reward claim
+   - Institution identity verification
+   - Institution negative data verification
+
+2. **Cross-Portal Integration**
+   - Shared authentication state
+   - Real-time updates via blockchain events
+   - Consistent UI/UX across portals
+   - Responsive design testing (mobile, tablet, desktop)
+
+3. **Performance Optimization**
+   - Code splitting and lazy loading
+   - API call optimization with React Query
+   - IPFS upload chunking for large files
+   - WebSocket for real-time updates
+   - Caching strategies
+
+4. **Security Hardening**
+   - Input validation and sanitization
+   - XSS prevention
+   - CSRF protection
+   - Secure key storage (browser extension)
+   - Rate limiting on API calls
+
+5. **Accessibility**
+   - WCAG 2.1 AA compliance
+   - Screen reader testing
+   - Keyboard navigation
+   - Color contrast validation
+   - ARIA labels
+
+**Testing Framework**:
+```bash
+# Unit tests
+npm test -- --coverage
+
+# Integration tests
+npm run test:integration
+
+# E2E tests with Playwright
+npm run test:e2e
+
+# Accessibility tests
+npm run test:a11y
+```
+
+#### Key Frontend-Blockchain Interactions
+
+**Transaction Flow**:
+```typescript
+// Unified transaction handling
+export const useTransaction = () => {
+  const { api, account } = useSubstrate();
+
+  const sendTransaction = async (tx: SubmittableExtrinsic) => {
+    return new Promise((resolve, reject) => {
+      tx.signAndSend(account, ({ status, events }) => {
+        if (status.isInBlock) {
+          toast.info('Transaction in block');
+        }
+        if (status.isFinalized) {
+          // Check for errors in events
+          const errors = events.filter(({ event }) =>
+            api.events.system.ExtrinsicFailed.is(event)
+          );
+
+          if (errors.length > 0) {
+            reject(new Error('Transaction failed'));
+          } else {
+            toast.success('Transaction successful');
+            resolve(status.asFinalized);
+          }
+        }
+      }).catch(reject);
+    });
+  };
+
+  return { sendTransaction };
+};
+```
+
+**Event Subscription**:
+```typescript
+// Real-time consent updates
+export const useConsentEvents = (accountId: string) => {
+  const { api } = useSubstrate();
+  const [consents, setConsents] = useState([]);
+
+  useEffect(() => {
+    if (!api) return;
+
+    const unsubscribe = api.query.system.events((events) => {
+      events.forEach(({ event }) => {
+        if (api.events.consentManager.ConsentGranted.is(event)) {
+          const [owner, consentId] = event.data;
+          if (owner.toString() === accountId) {
+            // Fetch and update consent
+            fetchConsentDetails(consentId);
+          }
+        }
+      });
+    });
+
+    return () => {
+      unsubscribe.then(fn => fn());
+    };
+  }, [api, accountId]);
+
+  return consents;
+};
+```
+
+#### Deployment Strategy
+
+**Development**:
+- Local testnet with Zombienet
+- Hot reload for rapid development
+- Mock data for UI development without blockchain
+
+**Staging**:
+- Rococo testnet deployment
+- Real blockchain interaction
+- User acceptance testing
+
+**Production**:
+- CDN deployment (Vercel/Netlify)
+- IPFS pinning for decentralized hosting
+- Custom domain with SSL
+- Analytics integration (privacy-preserving)
+
+#### Documentation Deliverables
+
+1. **User Guides**:
+   - Patient onboarding guide
+   - Researcher data access guide
+   - Institution verification procedures
+   - Negative data submission guide
+
+2. **Developer Documentation**:
+   - Setup instructions
+   - Component library docs (Storybook)
+   - API integration guide
+   - Testing guide
+   - Deployment guide
+
+3. **Video Tutorials**:
+   - Platform overview (5 min)
+   - Patient consent management (3 min)
+   - Researcher data purchase (4 min)
+   - Negative data submission (6 min)
+
+---
+
 ### Month 7: Integration & XCM Testing
 
 #### Week 25-26: XCM Message Flows
