@@ -597,6 +597,7 @@ members = [
 	"health-data-chain/pallets/encryption",
 	"health-data-chain/pallets/provenance",
 	"marketplace-chain/pallets/data-listings",
+	"marketplace-chain/pallets/negative-registry",
 ]
 
 default-members = [

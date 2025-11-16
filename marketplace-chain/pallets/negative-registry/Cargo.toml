@@ -1,0 +1,46 @@
+[package]
+name = "pallet-negative-registry"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license = "MIT"
+description = "Negative health outcome registry and marketplace pallet for Patient X (FLAGSHIP FEATURE)"
+repository.workspace = true
+
+[dependencies]
+codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive", "max-encoded-len"] }
+scale-info = { version = "2.0.0", default-features = false, features = ["derive"] }
+
+# Substrate dependencies
+frame-support = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+frame-system = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+frame-benchmarking = { default-features = false, optional = true, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+sp-core = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+sp-runtime = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+sp-std = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+sp-io = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+
+[dev-dependencies]
+sp-io = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+
+[features]
+default = ["std"]
+std = [
+	"codec/std",
+	"scale-info/std",
+	"frame-support/std",
+	"frame-system/std",
+	"sp-core/std",
+	"sp-runtime/std",
+	"sp-std/std",
+	"sp-io/std",
+]
+runtime-benchmarks = [
+	"frame-benchmarking/runtime-benchmarks",
+	"frame-support/runtime-benchmarks",
+	"frame-system/runtime-benchmarks",
+]
+try-runtime = [
+	"frame-support/try-runtime",
+	"frame-system/try-runtime",
+]
