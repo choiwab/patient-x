@@ -598,6 +598,8 @@ members = [
 	"health-data-chain/pallets/provenance",
 	"marketplace-chain/pallets/data-listings",
 	"marketplace-chain/pallets/negative-registry",
+	"marketplace-chain/pallets/marketplace",
+	"marketplace-chain/pallets/reputation",
 ]
 
 default-members = [
