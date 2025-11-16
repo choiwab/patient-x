@@ -12858,6 +12858,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-health-records"
+version = "0.1.0"
+dependencies = [
+ "frame-benchmarking 28.0.0 (git+https://github.com/paritytech/polkadot-sdk.git?branch=master)",
+ "frame-support 28.0.0 (git+https://github.com/paritytech/polkadot-sdk.git?branch=master)",
+ "frame-system 28.0.0 (git+https://github.com/paritytech/polkadot-sdk.git?branch=master)",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core 28.0.0 (git+https://github.com/paritytech/polkadot-sdk.git?branch=master)",
+ "sp-io 30.0.0 (git+https://github.com/paritytech/polkadot-sdk.git?branch=master)",
+ "sp-runtime 31.0.1 (git+https://github.com/paritytech/polkadot-sdk.git?branch=master)",
+ "sp-std 14.0.0 (git+https://github.com/paritytech/polkadot-sdk.git?branch=master)",
+]
+
+[[package]]
 name = "pallet-identity"
 version = "29.0.0"
 dependencies = [
